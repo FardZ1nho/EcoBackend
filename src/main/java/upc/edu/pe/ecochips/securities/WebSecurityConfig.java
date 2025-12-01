@@ -40,16 +40,19 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // 🛑 SOLUCION FINAL: Filtro CORS Global (usando CorsFilter para asegurar la ejecución)
+    // ✅ SOLUCION CORS CORREGIDA
     @Bean
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
 
-        // Permite TODOS los origenes, metodos y headers para forzar la conexion
-        // (Debe funcionar si el codigo de Render anterior no se aplicaba)
+        // ✅ Especifica los orígenes permitidos (NO uses "*" con allowCredentials)
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("*");
+        config.addAllowedOrigin("http://localhost");
+        config.addAllowedOrigin("http://localhost:4200");
+        config.addAllowedOrigin("https://ecochips-frontend.onrender.com"); // 👈 Cambia esto por tu URL real de Render
+
+        // Permite todos los headers y métodos
         config.addAllowedHeader("*");
         config.addAllowedMethod("OPTIONS");
         config.addAllowedMethod("HEAD");
@@ -68,7 +71,7 @@ public class WebSecurityConfig {
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
 
-                // 🛑 AÑADIMOS EL FILTRO CORS ANTES DE LA SEGURIDAD
+                // Añade el filtro CORS antes de la seguridad
                 .addFilterBefore(corsFilter(), UsernamePasswordAuthenticationFilter.class)
 
                 .authorizeHttpRequests(req -> req
