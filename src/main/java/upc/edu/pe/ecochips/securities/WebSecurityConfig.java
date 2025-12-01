@@ -60,11 +60,8 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // 🛑 BUENA PRÁCTICA DE SEGURIDAD: Solo permitimos la URL del Frontend de Render y la de desarrollo.
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:4200",
-                "https://ecochips-frontend.onrender.com" // URL de tu Frontend en Render
-        ));
+        // 🛑 SOLUCIÓN DE EMERGENCIA: Permite CUALQUIER ORIGEN para forzar la conexión.
+        configuration.setAllowedOrigins(Arrays.asList("*"));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
