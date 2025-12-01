@@ -56,15 +56,16 @@ public class WebSecurityConfig {
         auth.userDetailsService(jwtUserDetailsService).passwordEncoder(passwordEncoder());
     }
 
-    // ✅ AGREGAR ESTE MÉTODO - CONFIGURACIÓN CORS
+    // ✅ CONFIGURACIÓN CORS (PERMISOS DE SEGURIDAD)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // 🛑 CORRECCIÓN CLAVE: AGREGAMOS LA URL PUBLICA DE RENDER
+        // 🛑 BUENA PRÁCTICA DE SEGURIDAD: Solo permitimos la URL del Frontend de Render y la de desarrollo.
         configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:4200", // Para desarrollo local
-                "https://ecochips-frontend.onrender.com" // Para produccion (URL de tu Frontend)
+                "http://localhost:4200",
+                "https://ecochips-frontend.onrender.com" // URL de tu Frontend en Render
         ));
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
@@ -80,12 +81,14 @@ public class WebSecurityConfig {
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
 
-                // ✅ AGREGAR ESTA LÍNEA - Habilitar CORS
+                // ✅ Habilitar CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .authorizeHttpRequests(req -> req
+                        // Rutas publicas
                         .requestMatchers("/login", "/register").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        // Todas las demas rutas estan autenticadas por JWT
                         .anyRequest().authenticated()
                 )
                 .formLogin(AbstractHttpConfigurer::disable)
