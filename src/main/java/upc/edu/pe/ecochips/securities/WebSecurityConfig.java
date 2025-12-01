@@ -46,11 +46,11 @@ public class WebSecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
 
-        // ✅ Especifica los orígenes permitidos (NO uses "*" con allowCredentials)
+        // ✅ Especifica los orígenes permitidos
         config.setAllowCredentials(true);
         config.addAllowedOrigin("http://localhost");
         config.addAllowedOrigin("http://localhost:4200");
-        config.addAllowedOrigin("https://ecochips-frontend.onrender.com"); // 👈 Cambia esto por tu URL real de Render
+        config.addAllowedOrigin("https://ecochips-frontend.onrender.com"); // ✅ Tu URL del frontend
 
         // Permite todos los headers y métodos
         config.addAllowedHeader("*");
