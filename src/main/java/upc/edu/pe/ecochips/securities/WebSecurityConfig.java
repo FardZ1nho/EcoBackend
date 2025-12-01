@@ -60,7 +60,11 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+        // 🛑 CORRECCIÓN CLAVE: AGREGAMOS LA URL PUBLICA DE RENDER
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:4200", // Para desarrollo local
+                "https://ecochips-frontend.onrender.com" // Para produccion (URL de tu Frontend)
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
