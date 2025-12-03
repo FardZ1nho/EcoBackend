@@ -40,17 +40,17 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // ✅ SOLUCION CORS CORREGIDA
+    // ✅ CONFIGURACIÓN CORS CORREGIDA
     @Bean
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
 
-        // ✅ Especifica los orígenes permitidos
+        // ✅ Especifica los orígenes permitidos (FRONTEND URLs)
         config.setAllowCredentials(true);
         config.addAllowedOrigin("http://localhost");
         config.addAllowedOrigin("http://localhost:4200");
-        config.addAllowedOrigin("https://ecobackend-1zas.onrender.com"); // ✅ Tu URL del frontend
+        config.addAllowedOrigin("https://ecochips-frontend.onrender.com"); // ✅ CORREGIDO - URL del FRONTEND
 
         // Permite todos los headers y métodos
         config.addAllowedHeader("*");
@@ -75,10 +75,10 @@ public class WebSecurityConfig {
                 .addFilterBefore(corsFilter(), UsernamePasswordAuthenticationFilter.class)
 
                 .authorizeHttpRequests(req -> req
-                        // Rutas publicas
+                        // Rutas públicas
                         .requestMatchers("/login", "/register").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        // Todas las demas rutas estan autenticadas por JWT
+                        // Todas las demás rutas están autenticadas por JWT
                         .anyRequest().authenticated()
                 )
                 .formLogin(AbstractHttpConfigurer::disable)
