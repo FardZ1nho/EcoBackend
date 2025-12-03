@@ -103,75 +103,73 @@ public class JwtAuthenticationController {
 
     // ✅ REGISTRO - Crea usuario y devuelve token automáticamente
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody UsuarioRegistroDTO dto) {
+    @PostMapping("/register")
+public ResponseEntity<?> register(@RequestBody UsuarioRegistroDTO dto) {
+    try {
+        // 1. Validar si el nombre ya existe
+        if (userRepository.existsByNombre(dto.getNombre())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "El nombre de usuario ya existe"));
+        }
+        
+        // 2. Validar si el correo ya existe
+        if (userRepository.countByCorreo(dto.getCorreo()) > 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "El correo ya está registrado"));
+        }
+        
+        // 3. Crear nuevo usuario
+        Usuario usuario = new Usuario();
+        usuario.setNombre(dto.getNombre());
+        usuario.setCorreo(dto.getCorreo());
+        usuario.setContrasena(passwordEncoder.encode(dto.getContrasena()));
+        
+        // ✅ SOLUCIÓN: Usar getReferenceById en lugar de findByNombre
         try {
-            // 1. Validar si el nombre ya existe
-            if (userRepository.existsByNombre(dto.getNombre())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "El nombre de usuario ya existe"));
-            }
-
-            // 2. Validar si el correo ya existe
-            if (userRepository.countByCorreo(dto.getCorreo()) > 0) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "El correo ya está registrado"));
-            }
-
-            // 3. Crear nuevo usuario
-            Usuario usuario = new Usuario();
-            usuario.setNombre(dto.getNombre());
-            usuario.setCorreo(dto.getCorreo());
-
-            // ✅ IMPORTANTE: Encriptar contraseña con BCrypt
-            usuario.setContrasena(passwordEncoder.encode(dto.getContrasena()));
-
-            // 4. Asignar rol USER por defecto
-            Rol rolUsuario = rolRepository.findByNombre("USER");
-            if (rolUsuario == null) {
-                rolUsuario = new Rol();
-                rolUsuario.setNombre("USER");
-                rolUsuario.setDescripcion("Usuario estándar");
-                rolRepository.save(rolUsuario);
-            }
-
-            List<Rol> roles = new ArrayList<>();
-            roles.add(rolUsuario);
-            usuario.setRoles(roles);
-
-            // 5. Establecer valores por defecto
-            usuario.setEnabled(true);
-            usuario.setNivel(1);
-            usuario.setEdad(0); // Perfil incompleto
-            usuario.setGenero("PENDIENTE");
-            usuario.setCo2Total(0.0);
-            usuario.setCanjesDisponibles(0);
-
-            // 6. Guardar usuario
-            Usuario savedUsuario = userRepository.save(usuario);
-
-            // 7. Generar token automáticamente después del registro
-            final UserDetails userDetails = userDetailsService.loadUserByUsername(savedUsuario.getNombre());
-            final String token = jwtTokenUtil.generateToken(userDetails);
-
-            // 8. Respuesta con token
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Usuario registrado exitosamente");
-            response.put("token", token);
-            response.put("username", savedUsuario.getNombre());
-            response.put("correo", savedUsuario.getCorreo());
-            response.put("idUsuario", savedUsuario.getIdUsuario());
-            response.put("roles", userDetails.getAuthorities());
-            response.put("nivel", savedUsuario.getNivel());
-            response.put("co2Total", savedUsuario.getCo2Total());
-
-            return ResponseEntity.ok(response);
-
+            Rol rolUsuario = rolRepository.getReferenceById(1);
+            
+            // Asignar el rol al usuario usando addRol
+            usuario.getRoles().clear();
+            usuario.addRol(rolUsuario);
+            
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error al registrar usuario: " + e.getMessage()));
+                    .body(Map.of("error", "Rol USER (ID=1) no encontrado en la base de datos"));
         }
+        
+        // 5. Valores por defecto
+        usuario.setEnabled(true);
+        usuario.setNivel(1);
+        usuario.setEdad(0);
+        usuario.setGenero("PENDIENTE");
+        usuario.setCo2Total(0.0);
+        usuario.setCanjesDisponibles(0);
+        
+        // 6. Guardar usuario
+        Usuario savedUsuario = userRepository.save(usuario);
+        
+        // 7. Generar token automáticamente
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(savedUsuario.getNombre());
+        final String token = jwtTokenUtil.generateToken(userDetails);
+        
+        // 8. Crear respuesta
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Usuario registrado exitosamente");
+        response.put("token", token);
+        response.put("username", savedUsuario.getNombre());
+        response.put("correo", savedUsuario.getCorreo());
+        response.put("idUsuario", savedUsuario.getIdUsuario());
+        response.put("roles", userDetails.getAuthorities());
+        response.put("nivel", savedUsuario.getNivel());
+        response.put("co2Total", savedUsuario.getCo2Total());
+        
+        return ResponseEntity.ok(response);
+        
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error al registrar usuario: " + e.getMessage()));
     }
-
+}
     // ✅ Método privado para autenticar (ahora con manejo mejorado de excepciones)
     private void authenticate(String username, String password) throws Exception {
         try {
