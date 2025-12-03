@@ -50,7 +50,7 @@ public class WebSecurityConfig {
         config.setAllowCredentials(true);
         config.addAllowedOrigin("http://localhost");
         config.addAllowedOrigin("http://localhost:4200");
-        config.addAllowedOrigin("https://ecochips-frontend.onrender.com"); // ✅ Tu URL del frontend
+        config.addAllowedOrigin("https://ecobackend-1zas.onrender.com"); // ✅ Tu URL del frontend
 
         // Permite todos los headers y métodos
         config.addAllowedHeader("*");
