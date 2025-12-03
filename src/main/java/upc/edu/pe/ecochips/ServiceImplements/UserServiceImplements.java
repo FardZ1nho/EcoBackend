@@ -1,12 +1,16 @@
 package upc.edu.pe.ecochips.ServiceImplements;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import upc.edu.pe.ecochips.DTOs.DistribucionGeneroDTO;
 import upc.edu.pe.ecochips.DTOs.UsuarioImpactoDTO;
+import upc.edu.pe.ecochips.Entities.Rol;
 import upc.edu.pe.ecochips.Entities.Usuario;
 import upc.edu.pe.ecochips.Repositories.IRegistroAlimentacionRepository;
 import upc.edu.pe.ecochips.Repositories.IRegistroTransporteRepository;
+import upc.edu.pe.ecochips.Repositories.IRolRepository;
 import upc.edu.pe.ecochips.Repositories.IUserRepository;
 import upc.edu.pe.ecochips.ServiceInterfaces.IUserService;
 
@@ -20,15 +24,51 @@ public class UserServiceImplements implements IUserService {
     private IUserRepository uR;
 
     @Autowired
+    private IRolRepository rolRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private IRegistroAlimentacionRepository registroAlimentacionRepository;
 
     @Autowired
     private IRegistroTransporteRepository registroTransporteRepository;
 
     // ==========================================
-    // ✅ ELIMINAR MÉTODOS DE LOGIN/REGISTRO
-    // Ahora se manejan en JwtAuthenticationController
+    // ✅ MÉTODO DE REGISTRO
+    // Asigna automáticamente el rol USUARIO (ID = 1)
     // ==========================================
+    @Override
+    @Transactional
+    public Usuario registrarUsuario(Usuario usuario) {
+        // Verificar si el correo ya existe
+        Usuario usuarioExistente = uR.findByCorreo(usuario.getCorreo());
+        if (usuarioExistente != null) {
+            throw new RuntimeException("El correo ya está registrado");
+        }
+
+        // Encriptar contraseña
+        usuario.setContrasena(passwordEncoder.encode(usuario.getContrasena()));
+
+        // ✅ Buscar el rol con ID = 1 (USUARIO) y asignarlo
+        Rol rolUsuario = rolRepository.findById(1)
+            .orElseThrow(() -> new RuntimeException("Rol USUARIO (ID=1) no encontrado en la base de datos"));
+
+        // Verificar si es relación Many-to-Many o Many-to-One
+        if (usuario.getRoles() != null) {
+            // ✅ Si es Many-to-Many (List<Rol> roles)
+            usuario.getRoles().clear();
+            usuario.addRol(rolUsuario);
+        } else {
+            // ✅ Si es Many-to-One (Rol rol)
+            usuario.setRol(rolUsuario);
+        }
+
+        usuario.setEnabled(true);
+
+        return uR.save(usuario);
+    }
 
     @Override
     public List<Usuario> list() {
