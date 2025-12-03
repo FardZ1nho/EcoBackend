@@ -102,8 +102,7 @@ public class JwtAuthenticationController {
     }
 
     // ✅ REGISTRO - Crea usuario y devuelve token automáticamente
-    @PostMapping("/register")
-    @PostMapping("/register")
+@PostMapping("/register")
 public ResponseEntity<?> register(@RequestBody UsuarioRegistroDTO dto) {
     try {
         // 1. Validar si el nombre ya existe
