@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/Usuarios")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "https://ecobackend-1zas.onrender.com")
 public class UserController {
 
     @Autowired
