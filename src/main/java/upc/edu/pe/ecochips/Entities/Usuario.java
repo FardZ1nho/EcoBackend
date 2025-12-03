@@ -34,15 +34,14 @@ public class Usuario implements Serializable {
     @Column(name = "nivel", nullable = false)
     private int nivel = 1;
 
-    // CORREGIDO: Quitar precision y scale para Double
     @Column(name = "co2_total")
     private Double co2Total = 0.0;
 
     @Column(name = "canjes_disponibles", nullable = false)
     private int canjesDisponibles = 0;
 
-    // RELACIÓN MUCHOS-A-MUCHOS
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    // ✅ CORREGIDO: Sin CascadeType.PERSIST
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "usuario_rol",
             joinColumns = @JoinColumn(name = "idUsuario"),
@@ -69,7 +68,7 @@ public class Usuario implements Serializable {
         this.roles = new ArrayList<>();
     }
 
-    // Getters y Setters (mantener igual)
+    // Getters y Setters
     public int getIdUsuario() { return idUsuario; }
     public void setIdUsuario(int idUsuario) { this.idUsuario = idUsuario; }
     public String getNombre() { return nombre; }
