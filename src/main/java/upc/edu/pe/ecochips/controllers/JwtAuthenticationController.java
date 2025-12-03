@@ -22,7 +22,7 @@ import upc.edu.pe.ecochips.securities.JwtTokenUtil;
 import java.util.*;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "https://ecobackend-1zas.onrender.com")
 public class JwtAuthenticationController {
 
     @Autowired
