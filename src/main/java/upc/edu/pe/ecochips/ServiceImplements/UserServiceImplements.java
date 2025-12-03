@@ -14,6 +14,8 @@ import upc.edu.pe.ecochips.Repositories.IRolRepository;
 import upc.edu.pe.ecochips.Repositories.IUserRepository;
 import upc.edu.pe.ecochips.ServiceInterfaces.IUserService;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,9 +37,11 @@ public class UserServiceImplements implements IUserService {
     @Autowired
     private IRegistroTransporteRepository registroTransporteRepository;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     // ==========================================
-    // ✅ MÉTODO DE REGISTRO
-    // Asigna automáticamente el rol USUARIO (ID = 1)
+    // ✅ MÉTODO DE REGISTRO CORREGIDO
     // ==========================================
     @Override
     @Transactional
@@ -51,13 +55,16 @@ public class UserServiceImplements implements IUserService {
         // Encriptar contraseña
         usuario.setContrasena(passwordEncoder.encode(usuario.getContrasena()));
 
-        // ✅ Buscar el rol con ID = 1 (USUARIO)
+        // ✅ Buscar el rol USUARIO (ID = 1)
         Rol rolUsuario = rolRepository.findById(1)
-            .orElseThrow(() -> new RuntimeException("Rol USUARIO (ID=1) no encontrado en la base de datos"));
+            .orElseThrow(() -> new RuntimeException("Rol USUARIO (ID=1) no encontrado"));
 
-        // ✅ Limpiar roles existentes y agregar solo el rol USUARIO
+        // ✅ SOLUCIÓN: Merge del rol para que esté en el contexto de persistencia
+        Rol rolManaged = entityManager.merge(rolUsuario);
+
+        // Limpiar y agregar el rol
         usuario.getRoles().clear();
-        usuario.addRol(rolUsuario);
+        usuario.addRol(rolManaged);
         usuario.setEnabled(true);
 
         return uR.save(usuario);
@@ -123,9 +130,9 @@ public class UserServiceImplements implements IUserService {
 
         return resultados.stream()
                 .map(result -> new DistribucionGeneroDTO(
-                        (String) result[0],                    // genero
-                        ((Number) result[1]).longValue(),      // cantidad_participantes
-                        ((Number) result[2]).doubleValue()     // edad_promedio
+                        (String) result[0],
+                        ((Number) result[1]).longValue(),
+                        ((Number) result[2]).doubleValue()
                 ))
                 .collect(Collectors.toList());
     }
