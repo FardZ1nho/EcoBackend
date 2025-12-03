@@ -6,6 +6,10 @@ import upc.edu.pe.ecochips.Entities.Usuario;
 import java.util.List;
 
 public interface IUserService {
+    
+    // ✅ Agregar solo esta línea
+    Usuario registrarUsuario(Usuario usuario);
+    
     List<Usuario> list();
     void insert(Usuario usuario);
     Usuario listId(int id);
