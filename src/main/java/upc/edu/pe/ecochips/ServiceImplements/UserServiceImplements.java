@@ -14,8 +14,6 @@ import upc.edu.pe.ecochips.Repositories.IRolRepository;
 import upc.edu.pe.ecochips.Repositories.IUserRepository;
 import upc.edu.pe.ecochips.ServiceInterfaces.IUserService;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,11 +35,8 @@ public class UserServiceImplements implements IUserService {
     @Autowired
     private IRegistroTransporteRepository registroTransporteRepository;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     // ==========================================
-    // ✅ MÉTODO DE REGISTRO CORREGIDO
+    // ✅ MÉTODO DE REGISTRO - SOLUCIÓN CON getReference
     // ==========================================
     @Override
     @Transactional
@@ -55,19 +50,20 @@ public class UserServiceImplements implements IUserService {
         // Encriptar contraseña
         usuario.setContrasena(passwordEncoder.encode(usuario.getContrasena()));
 
-        // ✅ Buscar el rol USUARIO (ID = 1)
-        Rol rolUsuario = rolRepository.findById(1)
-            .orElseThrow(() -> new RuntimeException("Rol USUARIO (ID=1) no encontrado"));
+        // ✅ SOLUCIÓN: Usar getReference en lugar de findById
+        // Esto crea un proxy sin cargar la entidad completa
+        try {
+            Rol rolUsuario = rolRepository.getReferenceById(1);
+            
+            // Limpiar y agregar el rol
+            usuario.getRoles().clear();
+            usuario.addRol(rolUsuario);
+            usuario.setEnabled(true);
 
-        // ✅ SOLUCIÓN: Merge del rol para que esté en el contexto de persistencia
-        Rol rolManaged = entityManager.merge(rolUsuario);
-
-        // Limpiar y agregar el rol
-        usuario.getRoles().clear();
-        usuario.addRol(rolManaged);
-        usuario.setEnabled(true);
-
-        return uR.save(usuario);
+            return uR.save(usuario);
+        } catch (Exception e) {
+            throw new RuntimeException("Rol USUARIO (ID=1) no encontrado en la base de datos");
+        }
     }
 
     @Override
