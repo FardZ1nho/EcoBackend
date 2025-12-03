@@ -47,22 +47,22 @@ public class JwtAuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody JwtRequestDTO req) {
         try {
-            // ✅ Autenticar con Spring Security (ahora acepta nombre o correo)
+            // Autenticar con Spring Security
             authenticate(req.getUsername(), req.getPassword());
 
-            // ✅ Cargar detalles del usuario (busca por nombre o correo)
+            // Cargar detalles del usuario
             final UserDetails userDetails = userDetailsService.loadUserByUsername(req.getUsername());
 
             // Generar token JWT
             final String token = jwtTokenUtil.generateToken(userDetails);
 
-            // ✅ Obtener información adicional del usuario (buscar por nombre o correo)
+            // Obtener información adicional del usuario
             Usuario usuario = userRepository.findOneByNombre(req.getUsername());
             if (usuario == null) {
                 usuario = userRepository.findByCorreo(req.getUsername());
             }
 
-            // ✅ Validar que se encontró el usuario
+            // Validar que se encontró el usuario
             if (usuario == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Usuario no encontrado"));
@@ -136,4 +136,45 @@ public class JwtAuthenticationController {
             usuario.setNivel(1);
             usuario.setEdad(0);
             usuario.setGenero("PENDIENTE");
-            usuario.setCo2Total(
+            usuario.setCo2Total(0.0);
+            usuario.setCanjesDisponibles(0);
+
+            // 6. Guardar usuario
+            Usuario savedUsuario = userRepository.save(usuario);
+
+            // 7. Generar token automáticamente
+            final UserDetails userDetails = userDetailsService.loadUserByUsername(savedUsuario.getNombre());
+            final String token = jwtTokenUtil.generateToken(userDetails);
+
+            // 8. Crear respuesta
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Usuario registrado exitosamente");
+            response.put("token", token);
+            response.put("username", savedUsuario.getNombre());
+            response.put("correo", savedUsuario.getCorreo());
+            response.put("idUsuario", savedUsuario.getIdUsuario());
+            response.put("roles", userDetails.getAuthorities());
+            response.put("nivel", savedUsuario.getNivel());
+            response.put("co2Total", savedUsuario.getCo2Total());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error al registrar usuario: " + e.getMessage()));
+        }
+    }
+
+    // ✅ Método privado para autenticar
+    private void authenticate(String username, String password) throws Exception {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, password)
+            );
+        } catch (DisabledException e) {
+            throw new DisabledException("Usuario deshabilitado", e);
+        } catch (BadCredentialsException e) {
+            throw new BadCredentialsException("Credenciales inválidas", e);
+        }
+    }
+}
