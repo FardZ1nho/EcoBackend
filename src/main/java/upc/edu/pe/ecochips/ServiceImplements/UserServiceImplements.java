@@ -51,20 +51,13 @@ public class UserServiceImplements implements IUserService {
         // Encriptar contraseña
         usuario.setContrasena(passwordEncoder.encode(usuario.getContrasena()));
 
-        // ✅ Buscar el rol con ID = 1 (USUARIO) y asignarlo
+        // ✅ Buscar el rol con ID = 1 (USUARIO)
         Rol rolUsuario = rolRepository.findById(1)
             .orElseThrow(() -> new RuntimeException("Rol USUARIO (ID=1) no encontrado en la base de datos"));
 
-        // Verificar si es relación Many-to-Many o Many-to-One
-        if (usuario.getRoles() != null) {
-            // ✅ Si es Many-to-Many (List<Rol> roles)
-            usuario.getRoles().clear();
-            usuario.addRol(rolUsuario);
-        } else {
-            // ✅ Si es Many-to-One (Rol rol)
-            usuario.setRol(rolUsuario);
-        }
-
+        // ✅ Limpiar roles existentes y agregar solo el rol USUARIO
+        usuario.getRoles().clear();
+        usuario.addRol(rolUsuario);
         usuario.setEnabled(true);
 
         return uR.save(usuario);
